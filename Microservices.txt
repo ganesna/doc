@@ -1,0 +1,109 @@
+// Project Structure:
+// - service-a
+// - service-b
+// - eureka-server
+
+// --- EUREKA SERVER (Standalone) ---
+// Application.java
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(EurekaServerApplication.class, args);
+    }
+}
+
+// application.yml
+server:
+  port: 8761
+
+spring:
+  application:
+    name: eureka-server
+
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+
+// --- SERVICE B (Provider) ---
+// Application.java
+@SpringBootApplication
+@EnableEurekaClient
+@RestController
+public class ServiceBApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ServiceBApplication.class, args);
+    }
+
+    @GetMapping("/api/data")
+    public String getData() {
+        return "Hello from Service B";
+    }
+}
+
+// application.yml
+server:
+  port: 8082
+
+spring:
+  application:
+    name: service-b
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+// --- SERVICE A (Consumer with Feign) ---
+// Application.java
+@SpringBootApplication
+@EnableEurekaClient
+@EnableFeignClients
+@RestController
+public class ServiceAApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ServiceAApplication.class, args);
+    }
+
+    @Autowired
+    private ServiceBClient serviceBClient;
+
+    @GetMapping("/consume")
+    public String consume() {
+        return serviceBClient.getData();
+    }
+}
+
+// Feign Client
+@FeignClient(name = "service-b")
+public interface ServiceBClient {
+    @GetMapping("/api/data")
+    String getData();
+}
+
+// application.yml
+server:
+  port: 8081
+
+spring:
+  application:
+    name: service-a
+
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 5000
+        read-timeout: 5000
+
+# Eureka Client Configuration
+  cloud:
+    loadbalancer:
+      ribbon:
+        enabled: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

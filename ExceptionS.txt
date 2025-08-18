@@ -1,0 +1,43 @@
+curl -X POST localhost:8080/student/course -H 'Content-Type: application/json' -d '{"name":"Ananth","age":46,"dept":"Cloud","coursesGAK":[{"title":"B","abbreviation":"A","modules":"2","fee":"23"}]}'
+     
+	 
+curl -Iv --tlsv1.3 https://localhost:8080
+
+java.lang.UnsupportedClassVersionError
+-> You compiled with JDK 17, but run with JDK 8 → version mismatch.	
+✅ Docker lets you pin your JDK/JRE version in the image (e.g., FROM openjdk:17). Same everywhere → no version mismatch!
+
+java.lang.ClassNotFoundException      
+-> Your code references a class that’s missing at runtime (e.g., missing JAR in classpath).
+
+java.lang.NoClassDefFoundError        
+
+java.lang.UnsatisfiedLinkError        
+-> Native library (e.g., .so or .dll) is missing, wrong version, or incompatible OS.
+✅ Docker ensures consistent OS & native libraries inside the image — so you don’t get surprises when moving from dev to prod.
+
+javax.naming.ConfigurationException   
+-> Config file or environment variable missing.
+✅ Docker lets you package defaults and override config with env vars or mounted files, so config drift is less likely.
+
+java.io.FileNotFoundException   
+-> Missing file expected on disk	
+✅ You can bundle required files in the image or mount them consistently
+      
+java.net.BindException   
+-> Port conflict on host
+✅ Containers isolate ports; you control mappings in docker-compose.yml            
+java.net.SocketTimeoutException 
+Service not reachable	
+✅ Compose helps you ensure dependent services run together.
+      
+java.net.UnknownHostException
+-> DNS/hostname config issue
+✅ Docker Compose networks handle name resolution (db, api, etc.).
+         
+java.sql.SQLException               
+-> Wrong JDBC URL, missing DB drivers  
+✅ You can bake drivers into the image & ensure config is environment-variable driven.
+->java.lang.IllegalStateException 
+Often bad config or missing env var
+✅ Use consistent ENV vars in your Dockerfile or Compose file.

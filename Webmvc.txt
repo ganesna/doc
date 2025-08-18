@@ -1,0 +1,21 @@
+@Controller
+public class DemoController {
+
+    @GetMapping("/model")
+    public String useModel(Model model) {
+        model.addAttribute("msg", "Using Model");
+        return "viewPage";
+    }
+
+    @GetMapping("/mav")
+    public ModelAndView useModelAndView() {
+        ModelAndView mav = new ModelAndView("viewPage");
+        mav.addObject("msg", "Using ModelAndView")
+        return mav;
+    }
+}
+
+
+What is DOM and what are the differences between Real DOM	and Virtual DOM?
+
+Architecture difference between	Component + Service + Module	Component-based only

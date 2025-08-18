@@ -1,0 +1,195 @@
+curl -X POST localhost:8080/student/course -H 'Content-Type: application/json' -d '{"name":"Ananth","age":46,"dept":"Cloud","coursesGAK":[{"title":"B","abbreviation":"A","modules":"2","fee":"23"}]}'
+     
+	 
+curl -Iv --tlsv1.3 https://localhost:8080
+
+java.lang.UnsupportedClassVersionError
+-> You compiled with JDK 17, but run with JDK 8 → version mismatch.	
+✅ Docker lets you pin your JDK/JRE version in the image (e.g., FROM openjdk:17). Same everywhere → no version mismatch!
+
+java.lang.ClassNotFoundException      
+-> Your code references a class that’s missing at runtime (e.g., missing JAR in classpath).
+
+java.lang.NoClassDefFoundError        
+
+java.lang.UnsatisfiedLinkError        
+-> Native library (e.g., .so or .dll) is missing, wrong version, or incompatible OS.
+✅ Docker ensures consistent OS & native libraries inside the image — so you don’t get surprises when moving from dev to prod.
+
+javax.naming.ConfigurationException   
+-> Config file or environment variable missing.
+✅ Docker lets you package defaults and override config with env vars or mounted files, so config drift is less likely.
+
+java.io.FileNotFoundException   
+-> Missing file expected on disk	
+✅ You can bundle required files in the image or mount them consistently
+      
+java.net.BindException   
+-> Port conflict on host
+✅ Containers isolate ports; you control mappings in docker-compose.yml            
+java.net.SocketTimeoutException 
+Service not reachable	
+✅ Compose helps you ensure dependent services run together.
+      
+java.net.UnknownHostException
+-> DNS/hostname config issue
+✅ Docker Compose networks handle name resolution (db, api, etc.).
+         
+java.sql.SQLException               
+-> Wrong JDBC URL, missing DB drivers  
+✅ You can bake drivers into the image & ensure config is environment-variable driven.
+->java.lang.IllegalStateException 
+Often bad config or missing env var
+✅ Use consistent ENV vars in your Dockerfile or Compose file.
+Slide 3  Why Docker for Java?
+“Works on my machine”
+⚡ Problem
+Developers often say: “It works on my machine, but it fails on QA/Prod!”
+
+🧩 Example
+You build your Spring Boot app with Java 17, but the QA server runs Java 11 → 💥 UnsupportedClassVersionError.
+
+🐳 How Docker solves it
+The Java runtime version is baked into your Docker image (FROM openjdk:17).
+Same version runs on dev, QA, p rod — no surprises.
+
+“Complex configs”
+⚡ Problem
+Java apps often rely on: Long XML config files, property files, and multiple .yaml for different environments.
+Developers tweak config files manually → mistakes happen.
+
+🧩 Example
+Developer uses application-dev.yml locally, but application-prod.yml is missing some keys → 💥 ConfigurationException or runtime failure.
+
+🐳 How Docker solves it
+You use ENV variables, config files mounted as volumes, or docker-compose.yml to inject config consistently.
+
+You can even bake safe defaults into the image → less config drift.
+
+“Environment mismatches”
+⚡ Problem
+Differences in:
+
+OS libraries (native .so files)
+Networking setup (hostnames, ports)
+Filesystem paths
+
+can break apps when you move from Dev → QA → Prod.
+
+🧩 Example
+A native .so file used by a JDBC driver works on your Windows laptop, but the Linux server needs the Linux version → 💥 UnsatisfiedLinkError.
+
+🐳 How Docker solves it
+Your base OS image (Debian, Alpine, etc.) and native dependencies are inside the container.
+
+You build once, run anywhere with the same base OS, same libraries.
+
+“Pluggable components”
+⚡ Problem
+Modern Java apps often integrate with:
+
+Databases (Postgres, Oracle)
+Message brokers (RabbitMQ, Kafka)
+Third-party APIs (Auth services)
+
+Keeping all the right versions installed and running on every environment is a pain.
+
+🧩 Example
+Your local dev machine runs MySQL 8.0 but the QA server uses MySQL 5.7 → you hit SQL syntax issues or missing features.
+
+🐳 How Docker solves it
+Use Docker Compose: run DB, Kafka, your app in separate containers on a shared network.
+
+Each service version is pinned (image: mysql:8.0).
+
+New developer? docker-compose up → all services spin up identically.
+
+✅ One-liner slide takeaway
+“Docker helps us beat ‘works on my machine’ excuses, untangles complex configs, eliminates environment drift, and makes pluggable components consistent — all in one portable package!”
+
+📊 Example comparison for your slide
+Traditional Java Deployment	With Docker
+✅ Works on my machine, breaks in QA	✅ Same runtime, same everywhere
+❌ Config files scattered	✅ Consistent configs via ENV/volumes
+❌ OS/lib mismatch errors	✅ Base OS & libs frozen in image
+❌ Different DB/broker versions	✅ Pinned container images for every component
+
+
+
+Slide 6
+
+
+Why containerize a monolith?
+Even a big single JAR/WAR monolith gains huge value when you wrap it in a Docker container:
+
+📊 📌 Before Docker vs After Docker
+Before Docker	After Docker
+Build & Deploy	WAR/JAR must run on app server (Tomcat/WebLogic) installed on each host manually	Self-contained image has Tomcat, JDK, configs, native libs — no manual host setup
+Rollback	Revert files on servers manually, or redeploy old WAR/JAR	Just redeploy previous image tag (immutable)
+Config Management	Configs scattered across environments → manual changes	ENV vars and mounted configs in docker-compose.yml
+Environment Drift	Dev = Windows, QA = Linux → works here, breaks there	Same container image runs everywhere
+Scaling	Scale means more VMs, more app server setup	Scale containers easily → docker-compose up --scale or use orchestration (K8s)
+
+📌 🗂️ Example: Real benefit
+🔹 Before:
+
+Developer deploys myapp.war to a Tomcat server.
+
+QA server has an older JDK.
+
+OS lib mismatch → UnsatisfiedLinkError.
+
+Manual fixes, delays.
+
+🔹 After:
+
+Docker image: FROM tomcat:9-jdk17
+
+App + runtime all baked in.
+
+QA pulls same image → same behavior.
+
+No surprises. Rollback is docker run myapp:v1.
+
+✅ 🎯 One-liner takeaway
+“Containerizing even a legacy monolith gives you a repeatable, portable, rollback-friendly, and more scalable deployment — with fewer environment headaches.”
+
+🗂️ 🧩 Suggested slide bullets
+✔ Predictable builds → no “it works on my machine”
+✔ Consistent dev, QA, and production environments
+✔ Rollback anytime → versioned, immutable images
+✔ Horizontal scaling possible → run multiple replicas
+✔ Smoother CI/CD → build once, run anywhere
+
+
+Key takeaway for Java devs: “A Dockerfile ensures that everyone on the team builds the same image, with the same JDK, same OS, same app code, and same config — no manual setup, no surprises.”
+1️⃣ 
+
+curl -X POST localhost:8080/student/course
+    -H 'Content-Type: application/json'
+    -d '{"name":"Ananth","age":46,"dept":"Cloud","coursesGAK":[{"title":"B","abbreviation":"A","modules":"2","fee":"23"}]}'
+	
+	C:\Projects\Many2Many>java -jar target\Many2Many-0.0.1-SNAPSHOT.jar
+	
+	C:\Projects\Many2Many>set PATH=C:\maven\bin\;C:\jdk-17.0.14\bin\;%PATH%
+     
+	 
+	 
+	 
+ssh vmintegadmin@20.235.90.117
+
+Simplified Application Definition:
+Instead of running multiple docker run commands for each service, a single docker-compose.yml file defines the entire application stack.
+
+Docker doesn’t fix bad code or missing dependencies — but it does give you a predictable, portable, and consistent environment that prevents ‘works on my machine’ issues.
+
+Browser:  http://localhost/  -->  Apache port 80
+   |
+   |-- [ VirtualHost *:80 ] --> Redirect to https://localhost/
+   
+Browser:  https://localhost/ --> Apache port 443
+   |
+   |-- [ VirtualHost *:443 ] --> TLS termination + ProxyPass to Spring Boot on 8080
+   
+   curl -X POST localhost:8080/student/course -H 'Content-Type: application/json' -d '{"name":"Ananth","age":46,"dept":"Cloud","coursesGAK":[{"title":"B","abbreviation":"A","modules":"2","fee":"23"}]}'
+     
